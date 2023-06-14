@@ -12,10 +12,12 @@ class Zookeeper(db.Model):
     __tablename__ = 'zookeepers'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    birthday = db.Column(db.DateTime)
+    name = db.Column(db.String, nullable=False)
+    birthday = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    animals = db.relationship("Animal", backref="zookeeper")
+    animals = db.relationship("Animal", back_populates="zookeeper")
 
     def __repr__(self):
         return f"""
@@ -27,12 +29,18 @@ class Zookeeper(db.Model):
 
 class Enclosure(db.Model):
     __tablename__ = 'enclosures'
+    __table_args__ = (
+        db.CheckConstraint("environment IN (\'Pond\', \'Ocean\', \'Field\', \'Trees\', \'Cave\', \'Cage\', \'Desert\')", 
+                            name="env_check"),
 
+    )
     id = db.Column(db.Integer, primary_key=True)
-    environment = db.Column(db.String)
+    environment = db.Column(db.String, nullable=False)
     open_to_visitors = db.Column(db.Boolean)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    animals = db.relationship("Animal", backref="enclosure")
+    animals = db.relationship("Animal", back_populates="enclosure")
 
     def __repr__(self):
         return f"""
@@ -46,11 +54,16 @@ class Animal(db.Model):
     __tablename__ = 'animals'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    species = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
+    species = db.Column(db.String, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, onupdate=db.func.now())
     
     zookeeper_id = db.Column(db.Integer, db.ForeignKey('zookeepers.id'))
     enclosure_id = db.Column(db.Integer, db.ForeignKey('enclosures.id'))
+
+    zookeeper = db.relationship("Zookeeper", back_populates="animals")
+    enclosure = db.relationship("Enclosure", back_populates="animals")
 
     def __repr__(self):
         return f"""
